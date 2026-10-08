@@ -68,6 +68,28 @@
   }
   .item-row[draggable="true"] { cursor: grab; }
   .item-row.dragging { opacity: 0.4; }
+  .cat-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .cat-header .chevron { transition: transform 0.2s; margin-left: 0.25rem; }
+  .cat-header .cat-count {
+    font-size: 0.72rem;
+    font-weight: 500;
+    margin-left: auto;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+  }
+  .cat-collapsed .chevron { transform: rotate(-90deg); }
+  .cat-collapsed .cat-body { display: none; }
   .drop-target {
     outline: 2px dashed var(--bs-primary);
     outline-offset: -2px;
@@ -251,16 +273,41 @@ function esc(s) {
   return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
 }
 
-function renderPanel(panelId, countId, items, bucket) {
-  const el = document.getElementById(panelId);
-  const cnt = document.getElementById(countId);
-  const showAdded = document.getElementById('sortSelect').value.startsWith('added');
-  cnt.textContent = items.length;
-  if (items.length === 0) {
-    el.innerHTML = '<div class="panel-empty"><i class="bi bi-check-circle text-success me-1"></i>Empty</div>';
-    return;
+// Second tree level: Grocy product group inside each storage bucket.
+// Blank groups read as Uncategorized so every row lands somewhere.
+const UNCATEGORIZED = 'Uncategorized';
+function catName(item) {
+  return (item.category || '').trim() || UNCATEGORIZED;
+}
+function catKey(bucket, cat) {
+  return bucket + '::' + cat;
+}
+function getCatCollapsed() {
+  try {
+    const raw = localStorage.getItem('inv_cat_collapsed');
+    return raw === null ? null : JSON.parse(raw);  // null = first visit
+  } catch(e) { return []; }
+}
+function toggleCategory(header) {
+  const group = header.closest('.cat-group');
+  if (!group) return;
+  const key = group.dataset.catKey;
+  const isCollapsed = group.classList.toggle('cat-collapsed');
+  // First visit renders everything collapsed with nothing stored yet, so
+  // the stored set starts as every rendered group minus the one opened.
+  let collapsed = getCatCollapsed();
+  if (collapsed === null) {
+    collapsed = [...document.querySelectorAll('.cat-group')]
+      .map(g => g.dataset.catKey).filter(Boolean);
   }
-  el.innerHTML = items.map(item => `
+  const next = isCollapsed
+    ? [...new Set([...collapsed, key])]
+    : collapsed.filter(k => k !== key);
+  localStorage.setItem('inv_cat_collapsed', JSON.stringify(next));
+}
+
+function itemRow(item, bucket, showAdded) {
+  return `
     <div class="item-row" id="row-${item.product_id}" draggable="true"
          data-product-id="${item.product_id}" data-bucket="${bucket}" data-name="${esc(item.name)}"
          ondragstart="dragStart(event)" ondragend="dragEnd(event)">
@@ -293,8 +340,38 @@ function renderPanel(panelId, countId, items, bucket) {
               onclick="printLabel(${item.product_id}, '${esc(item.name)}')">
         <i class="bi bi-printer"></i>
       </button>` : ''}
-    </div>
-  `).join('');
+    </div>`;
+}
+
+function renderPanel(panelId, countId, items, bucket) {
+  const el = document.getElementById(panelId);
+  const cnt = document.getElementById(countId);
+  bucket = bucket || panelId.replace(/^panel-/, '');
+  const showAdded = document.getElementById('sortSelect').value.startsWith('added');
+  cnt.textContent = items.length;
+  if (items.length === 0) {
+    el.innerHTML = '<div class="panel-empty"><i class="bi bi-check-circle text-success me-1"></i>Empty</div>';
+    return;
+  }
+  const collapsed = getCatCollapsed();
+  const groups = {};
+  items.forEach(item => {
+    const cat = catName(item);
+    (groups[cat] = groups[cat] || []).push(item);
+  });
+  el.innerHTML = Object.keys(groups).sort((a, b) => a.localeCompare(b)).map(cat => {
+    const rows = groups[cat];
+    const isCollapsed = collapsed === null ? true : collapsed.includes(catKey(bucket, cat));
+    return `
+    <div class="cat-group${isCollapsed ? ' cat-collapsed' : ''}" data-category="${esc(cat)}" data-cat-key="${esc(catKey(bucket, cat))}">
+      <div class="cat-header" data-toggle-cat="${esc(catKey(bucket, cat))}">
+        <i class="bi bi-tag"></i> ${esc(cat)}
+        <span class="cat-count">${rows.length}</span>
+        <i class="bi bi-chevron-down chevron"></i>
+      </div>
+      <div class="cat-body">${rows.map(item => itemRow(item, bucket, showAdded)).join('')}</div>
+    </div>`;
+  }).join('');
 }
 
 // Item lookup map (keyed by product_id) for pre-filling modals
@@ -505,7 +582,15 @@ async function consume(productId, amount, name) {
       redirect: 'manual' });
     // 303 redirect is expected on success
     const row = document.getElementById(`row-${productId}`);
-    if (row) row.remove();
+    if (row) {
+      const group = row.closest('.cat-group');
+      row.remove();
+      if (group) {
+        const left = group.querySelectorAll('.item-row').length;
+        if (left === 0) group.remove();
+        else group.querySelector('.cat-count').textContent = left;
+      }
+    }
     showToast(`✓ Consumed: ${name}`);
     // Update panel count
     PANEL_KEYS.forEach(b => {
@@ -566,6 +651,8 @@ function restoreCollapsed() {
 // Panel headers and move buttons carry their bucket id as data, never as code
 // spliced into an inline handler.
 document.addEventListener('click', function (ev) {
+  const catHeader = ev.target.closest('[data-toggle-cat]');
+  if (catHeader) { toggleCategory(catHeader); return; }
   const header = ev.target.closest('[data-toggle-panel]');
   if (header) { togglePanel(header.dataset.togglePanel); return; }
   const moveBtn = ev.target.closest('[data-move-to]');

@@ -163,7 +163,7 @@ For each, create an API key/token in that service and paste it into the setup wi
 
 Runs inside Home Assistant with the UI in the sidebar and no separate login - HA handles auth through Ingress.
 
-1. **Settings > Add-ons > Add-on Store**, open the three-dot menu, choose **Repositories**, and add `https://github.com/Syracuse3DPrintingOrg/PantryRaider`.
+1. **Settings > Add-ons > Add-on Store**, open the three-dot menu, choose **Repositories**, and add `https://github.com/Yskaa91/PantryRaider`.
 2. Install **Pantry Raider** and start it, then click **Open Web UI**.
 
 Install the community **Grocy** add-on first and point Pantry Raider at it in the wizard. Full details, including low-power AI options: [add-on docs](homeassistant/addon/foodassistant/DOCS.md).
@@ -234,7 +234,7 @@ For support, turn on **Settings > Advanced > Debug logging** to raise the log le
 
 ## Home Assistant
 
-**Running Home Assistant OS or Supervised?** Install Pantry Raider as an add-on so it lives in the HA sidebar with no separate login - HA authenticates the UI through Ingress. In HA go to **Settings > Add-ons > Add-on Store**, open the menu, choose Repositories, and add `https://github.com/Syracuse3DPrintingOrg/PantryRaider`, then install Pantry Raider. Full instructions: [homeassistant/addon/foodassistant/DOCS.md](homeassistant/addon/foodassistant/DOCS.md).
+**Running Home Assistant OS or Supervised?** Install Pantry Raider as an add-on so it lives in the HA sidebar with no separate login - HA authenticates the UI through Ingress. In HA go to **Settings > Add-ons > Add-on Store**, open the menu, choose Repositories, and add `https://github.com/Yskaa91/PantryRaider`, then install Pantry Raider. Full instructions: [homeassistant/addon/foodassistant/DOCS.md](homeassistant/addon/foodassistant/DOCS.md).
 
 For a **standalone** install, see [homeassistant/README.md](homeassistant/README.md) for REST sensors, automations, and the Lovelace dashboard.
 

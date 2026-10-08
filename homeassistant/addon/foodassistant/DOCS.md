@@ -16,7 +16,9 @@ you through Ingress.
 
 1. In Home Assistant go to **Settings - Add-ons - Add-on Store**, open the
    three-dot menu, choose **Repositories**, and add:
-   `https://github.com/Syracuse3DPrintingOrg/PantryRaider`
+   `https://github.com/Yskaa91/PantryRaider`
+   (this fork — it ships its own image with its own changes; the upstream
+   repo is untouched).
 2. Install **Pantry Raider** from the list and start it.
 3. Click **Open Web UI** (or the sidebar entry) to launch the setup wizard.
 

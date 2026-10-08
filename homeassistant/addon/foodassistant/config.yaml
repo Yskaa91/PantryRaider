@@ -1,8 +1,8 @@
 name: Pantry Raider
-version: "0.20.2"
+version: "0.20.3"
 slug: foodassistant
 description: Food spoilage tracker with Grocy inventory and optional AI
-url: https://github.com/Syracuse3DPrintingOrg/PantryRaider
+url: https://github.com/Yskaa91/PantryRaider
 arch:
   - amd64
   - aarch64
