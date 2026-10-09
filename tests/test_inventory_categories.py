@@ -80,3 +80,15 @@ def test_inventory_page_consume_buttons_are_one_and_all(client):
     assert "Mark all" in r.text
     assert "Mark one" in r.text
     assert "bi-box2" not in r.text
+
+
+def test_inventory_page_defaults_to_name_sort_remembers_choice_and_uses_emoji(client):
+    """First paint sorts Name A-Z; the last used sort persists across visits;
+    category group headers carry an emoji, not the tag icon."""
+    with patch.object(type(settings), "is_configured", lambda self: True):
+        r = client.get("/ui/inventory")
+    assert r.status_code == 200
+    assert '<option value="name_asc" selected>' in r.text
+    assert "inv_sort" in r.text
+    assert "\U0001F969" in r.text  # Meat
+    assert "bi bi-tag" not in r.text

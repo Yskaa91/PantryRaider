@@ -112,7 +112,7 @@
       <option value="expiry_desc">Expiring latest</option>
       <option value="added_desc">Recently added (newest)</option>
       <option value="added_asc">Recently added (oldest)</option>
-      <option value="name_asc">Name A → Z</option>
+      <option value="name_asc" selected>Name A → Z</option>
       <option value="name_desc">Name Z → A</option>
       <option value="qty_desc">Quantity (most first)</option>
       <option value="qty_asc">Quantity (least first)</option>
@@ -279,6 +279,17 @@ const UNCATEGORIZED = 'Uncategorized';
 function catName(item) {
   return (item.category || '').trim() || UNCATEGORIZED;
 }
+// One emoji per product group on the category headers. Custom Grocy groups
+// outside this list fall back to the label emoji.
+const CAT_EMOJI = {
+  Poultry: '🍗', Meat: '🥩', Seafood: '🐟', Dairy: '🧀',
+  Produce: '🥬', Grains: '🌾', Condiments: '🧂', Beverages: '🥤',
+  Snacks: '🍿', Frozen: '🧊', Canned: '🥫', Other: '📦',
+  Uncategorized: '📦',
+};
+function catEmoji(cat) {
+  return CAT_EMOJI[cat] || '🏷️';
+}
 function catKey(bucket, cat) {
   return bucket + '::' + cat;
 }
@@ -365,7 +376,7 @@ function renderPanel(panelId, countId, items, bucket) {
     return `
     <div class="cat-group${isCollapsed ? ' cat-collapsed' : ''}" data-category="${esc(cat)}" data-cat-key="${esc(catKey(bucket, cat))}">
       <div class="cat-header" data-toggle-cat="${esc(catKey(bucket, cat))}">
-        <i class="bi bi-tag"></i> ${esc(cat)}
+        <span>${catEmoji(cat)}</span> ${esc(cat)}
         <span class="cat-count">${rows.length}</span>
         <i class="bi bi-chevron-down chevron"></i>
       </div>
@@ -517,6 +528,7 @@ async function moveItem(productId, bucket, name) {
 
 async function loadDashboard() {
   const sort = document.getElementById('sortSelect').value;
+  try { localStorage.setItem('inv_sort', sort); } catch(e) {}
   document.getElementById('loading-spinner').style.display = '';
   const status = document.getElementById('inventory-status');
   try {
@@ -644,7 +656,12 @@ document.addEventListener('click', function (ev) {
   if (moveBtn) moveFromModal(moveBtn.dataset.moveTo);
 });
 
-// Initial load
+// Initial load: last used sort wins, first visit sorts Name A-Z.
+try {
+  const saved = localStorage.getItem('inv_sort');
+  const sel = document.getElementById('sortSelect');
+  if (saved && [...sel.options].some(o => o.value === saved)) sel.value = saved;
+} catch(e) {}
 restoreCollapsed();
 loadDashboard();
 </script>
