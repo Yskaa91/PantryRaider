@@ -107,17 +107,19 @@ class MoveRequest(BaseModel):
 
 
 class EditRequest(BaseModel):
+    name: str | None = None
     category: str | None = None
     best_before_date: str | None = None  # YYYY-MM-DD or empty string to clear
 
 
 @router.patch("/edit/{product_id}")
 async def edit_item(product_id: int, body: EditRequest):
-    """Update category and/or best-by date for a product's stock entries."""
+    """Update name, category and/or best-by date for a product's stock entries."""
     grocy = GrocyClient()
     try:
+        name = (body.name or "").strip() or None
         bbd = body.best_before_date if body.best_before_date else None
-        return await grocy.edit_product(product_id, body.category, bbd)
+        return await grocy.edit_product(product_id, body.category, bbd, name=name)
     except Exception as e:
         raise HTTPException(500, str(e))
 

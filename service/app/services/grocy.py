@@ -781,8 +781,12 @@ class GrocyClient:
 
     async def edit_product(self, product_id: int,
                            category: str | None = None,
-                           best_before_date: str | None = None) -> dict:
-        """Update category (product group) and/or best-by date for every open stock entry."""
+                           best_before_date: str | None = None,
+                           name: str | None = None) -> dict:
+        """Update name, category (product group) and/or best-by date for every open stock entry."""
+        if name is not None:
+            await self._request("PUT", f"/objects/products/{product_id}",
+                                {"name": name})
         if category is not None:
             group_id = await self.ensure_product_group(category)
             await self._request("PUT", f"/objects/products/{product_id}",

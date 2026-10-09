@@ -195,6 +195,10 @@
       </div>
       <div class="modal-body">
         <div class="mb-3">
+          <label class="form-label fw-semibold" for="editName">Name</label>
+          <input type="text" class="form-control" id="editName" maxlength="100" autocomplete="off">
+        </div>
+        <div class="mb-3">
           <label class="form-label fw-semibold">Category</label>
           <select class="form-select" id="editCategory">
             <option value="">(unchanged)</option>
@@ -400,6 +404,7 @@ function openEditModal(productId) {
   if (!item) return;
   editTarget = productId;
   document.getElementById('editModalName').textContent = item.name;
+  document.getElementById('editName').value = item.name || '';
 
   const catSel = document.getElementById('editCategory');
   catSel.value = item.category || '';
@@ -419,6 +424,7 @@ async function saveEdit() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving…';
 
+  const name = document.getElementById('editName').value.trim() || null;
   const category = document.getElementById('editCategory').value || null;
   const bestBy   = document.getElementById('editBestBy').value || null;
 
@@ -426,7 +432,7 @@ async function saveEdit() {
     const r = await fetch(`/inventory/edit/${editTarget}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ category, best_before_date: bestBy }),
+      body: JSON.stringify({ name, category, best_before_date: bestBy }),
     });
     if (!r.ok) throw new Error(await prErrText(r));
     bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();

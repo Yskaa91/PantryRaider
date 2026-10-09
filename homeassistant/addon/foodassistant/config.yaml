@@ -1,5 +1,5 @@
 name: Pantry Raider
-version: "0.20.5"
+version: "0.20.6"
 slug: foodassistant
 description: Food spoilage tracker with Grocy inventory and optional AI
 url: https://github.com/Yskaa91/PantryRaider
