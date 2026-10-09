@@ -67,3 +67,16 @@ def test_inventory_page_groups_rows_by_category(client):
     assert "Uncategorized" in r.text
     assert "data-category" in r.text
     assert "inv_cat_collapsed" in r.text
+
+
+def test_inventory_page_consume_buttons_are_one_and_all(client):
+    """One tap consumes one unit (single check), the double-check consumes
+    the whole row. The opened-tracking button is gone from the overview."""
+    with patch.object(type(settings), "is_configured", lambda self: True):
+        r = client.get("/ui/inventory")
+    assert r.status_code == 200
+    assert "consume(${item.product_id}, 1," in r.text
+    assert "bi-check2-all" in r.text
+    assert "Mark all" in r.text
+    assert "Mark one" in r.text
+    assert "bi-box2" not in r.text

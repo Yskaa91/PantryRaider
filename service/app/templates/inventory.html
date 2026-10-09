@@ -327,13 +327,13 @@ function itemRow(item, bucket, showAdded) {
         <i class="bi bi-arrow-left-right"></i>
       </button>
       ${item.amount > 0 ? `
-      <button class="btn btn-outline-secondary btn-icon" title="Mark one ${esc(item.name)} opened"
-              onclick="markOpened(${item.product_id}, '${esc(item.name)}')">
-        <i class="bi bi-box2"></i>
+      <button class="btn btn-outline-secondary btn-icon" title="Mark one ${esc(item.name)} consumed"
+              onclick="consume(${item.product_id}, 1, '${esc(item.name)}')">
+        <i class="bi bi-check"></i>
       </button>` : ''}
-      <button class="btn btn-outline-secondary btn-icon" title="Mark consumed"
+      <button class="btn btn-outline-secondary btn-icon" title="Mark all ${esc(item.name)} consumed"
               onclick="consume(${item.product_id}, ${item.amount}, '${esc(item.name)}')">
-        <i class="bi bi-check2"></i>
+        <i class="bi bi-check2-all"></i>
       </button>
       ${PRINTING_ENABLED ? `
       <button class="btn btn-outline-secondary btn-icon" title="Print label"
@@ -578,27 +578,12 @@ async function consume(productId, amount, name) {
   const fd = new FormData();
   fd.append('amount', amount);
   try {
-    const r = await fetch(`/ui/consume/${productId}`, { method: 'POST', body: fd,
+    await fetch(`/ui/consume/${productId}`, { method: 'POST', body: fd,
       redirect: 'manual' });
-    // 303 redirect is expected on success
-    const row = document.getElementById(`row-${productId}`);
-    if (row) {
-      const group = row.closest('.cat-group');
-      row.remove();
-      if (group) {
-        const left = group.querySelectorAll('.item-row').length;
-        if (left === 0) group.remove();
-        else group.querySelector('.cat-count').textContent = left;
-      }
-    }
-    showToast(`✓ Consumed: ${name}`);
-    // Update panel count
-    PANEL_KEYS.forEach(b => {
-      const panel = document.getElementById(`panel-${b}`);
-      const rows = panel.querySelectorAll('.item-row').length;
-      if (rows === 0) renderPanel(`panel-${b}`, `count-${b}`, []);
-      else document.getElementById(`count-${b}`).textContent = rows;
-    });
+    // 303 redirect is expected on success. Reload so amounts, badges, and
+    // category counts stay honest instead of hand-editing the DOM.
+    showToast(amount === 1 ? `✓ Consumed 1 × ${name}` : `✓ Consumed: ${name}`);
+    await loadDashboard();
   } catch(e) {
     showToast(`Error: ${e.message}`, true);
   }
