@@ -277,6 +277,13 @@ function esc(s) {
   return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
 }
 
+// Names inside inline onclick '...' args (Colin d'Alaska): backslash and
+// the quote itself must be escaped for JS, where the HTML escaper above
+// does not help. HTML text/attributes keep using esc().
+function jsStr(s) {
+  return (s || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+}
+
 // Second tree level: Grocy product group inside each storage bucket.
 // Blank groups read as Uncategorized so every row lands somewhere.
 const UNCATEGORIZED = 'Uncategorized';
@@ -338,21 +345,21 @@ function itemRow(item, bucket, showAdded) {
         <i class="bi bi-pencil"></i>
       </button>
       <button class="btn btn-outline-secondary btn-icon" title="Move to another location"
-              onclick="openMoveModal(${item.product_id}, '${esc(item.name)}')">
+              onclick="openMoveModal(${item.product_id}, '${jsStr(item.name)}')">
         <i class="bi bi-arrow-left-right"></i>
       </button>
       ${item.amount > 0 ? `
       <button class="btn btn-outline-secondary btn-icon" title="Mark one ${esc(item.name)} consumed"
-              onclick="consume(${item.product_id}, 1, '${esc(item.name)}')">
+              onclick="consume(${item.product_id}, 1, '${jsStr(item.name)}')">
         <i class="bi bi-check"></i>
       </button>` : ''}
       <button class="btn btn-outline-secondary btn-icon" title="Mark all ${esc(item.name)} consumed"
-              onclick="consume(${item.product_id}, ${item.amount}, '${esc(item.name)}')">
+              onclick="consume(${item.product_id}, ${item.amount}, '${jsStr(item.name)}')">
         <i class="bi bi-check2-all"></i>
       </button>
       ${PRINTING_ENABLED ? `
       <button class="btn btn-outline-secondary btn-icon" title="Print label"
-              onclick="printLabel(${item.product_id}, '${esc(item.name)}')">
+              onclick="printLabel(${item.product_id}, '${jsStr(item.name)}')">
         <i class="bi bi-printer"></i>
       </button>` : ''}
     </div>`;

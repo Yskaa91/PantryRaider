@@ -71,3 +71,13 @@ def test_edit_modal_carries_name_field(client):
         r = client.get("/ui/inventory")
     assert r.status_code == 200
     assert 'id="editName"' in r.text
+
+
+def test_row_buttons_survive_apostrophe_in_name(client):
+    """Names like Colin d'Alaska must not break the inline onclick handlers:
+    JS string args go through a quote-escaping helper, not the HTML escaper."""
+    with patch.object(type(settings), "is_configured", lambda self: True):
+        r = client.get("/ui/inventory")
+    assert r.status_code == 200
+    assert "jsStr(item.name)" in r.text
+    assert "'${esc(item.name)}'" not in r.text
